@@ -1,4 +1,4 @@
-import { createContext, useState, ReactNode } from 'react';
+import { createContext, useState, ReactNode, useEffect } from 'react';
 
 import challenges from '../../challenges.json';
 
@@ -17,6 +17,7 @@ interface ChallengeContextData{
     levelUp:() => void;
     startNewChallenge:() => void;
     resetChallenge:() => void;
+    completeChellenge:() => void;
 }
 
 interface ChallengesProviderProps{
@@ -35,6 +36,9 @@ export function ChallengesProvider({children}:ChallengesProviderProps){//props
 
     const experienceToNextLevel = Math.pow((level + 1) * 4 ,2)//potencia para uppar de level
 
+    useEffect(() => {
+        Notification.requestPermission;
+    }, [])
 
     function levelUp(){
         setlevel(level + 1)
@@ -44,11 +48,40 @@ export function ChallengesProvider({children}:ChallengesProviderProps){//props
         const randomChallengesIndex = Math.floor(Math.random() * challenges.length);
         const challenge = challenges[randomChallengesIndex];
         setActiveChallenge(challenge)
+
+        new Audio('./notification.mp3').play
+
+        if (Notification.permission === 'granted') {
+            new Notification ('Novo Desafio ', {
+                body: `Valendo ${challenge.amount}XP`
+            })
+        }
     }
 
     function resetChallenge(){
         setActiveChallenge(null)
     }
+
+    function completeChellenge () {
+        if (!activeChallenge) {
+            return;
+        }
+
+    const { amount } = activeChallenge;
+    let finalExperience = CurrentExperience + amount;
+    if (finalExperience >= experienceToNextLevel) {
+        finalExperience = finalExperience - experienceToNextLevel;
+        levelUp();
+    }
+
+    setCurrentExperience(finalExperience);
+    setActiveChallenge(null);
+    SetChallengesCompleted(ChallengesCompleted + 1)
+
+    }
+
+
+
 
     //quando o componente recebe outro dentro dele se chama children e precisa passar props
     return(
@@ -62,7 +95,8 @@ export function ChallengesProvider({children}:ChallengesProviderProps){//props
             activeChallenge,
             levelUp,
             startNewChallenge,
-            resetChallenge
+            resetChallenge,
+            completeChellenge,
             }
               }>
             {children}
